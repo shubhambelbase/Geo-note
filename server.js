@@ -94,7 +94,11 @@ app.post('/api/note', async (req, res) => {
  * Finds nearby notes.
  */
 app.get('/api/notes', async (req, res) => {
+    console.log("A user is searching for notes!"); // <-- ADD THIS LINE
+
     const { lat, lon } = req.query;
+//...
+
 
     if (lat === undefined || lon === undefined) {
         return res.status(400).json({ error: 'Missing required query parameters: lat, lon' });
