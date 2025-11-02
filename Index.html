@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ephemeral Geo-Note</title>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@300;400&display=swap');
+
+        :root {
+            --color-bg: #0d1117;
+            --color-primary: #00ff9d;
+            --color-secondary: #0a2f35;
+            --color-text: #c9d1d9;
+            --color-border: rgba(0, 255, 157, 0.2);
+            --font-primary: 'Orbitron', sans-serif;
+            --font-secondary: 'Roboto', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-secondary);
+            background-color: var(--color-bg);
+            color: var(--color-text);
+            display: grid;
+            place-items: center;
+            min-height: 100vh;
+            padding: 1rem;
+            overflow: hidden;
+            background-image: 
+                radial-gradient(circle at 1px 1px, rgba(0, 255, 157, 0.1) 1px, transparent 0),
+                radial-gradient(circle at 10px 10px, rgba(0, 255, 157, 0.05) 1px, transparent 0);
+            background-size: 20px 20px;
+        }
+
+        /* --- Main App Container --- */
+        .geo-container {
+            width: 100%;
+            max-width: 450px;
+            background: rgba(13, 17, 23, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--color-border);
+            border-radius: 15px;
+            box-shadow: 0 0 40px rgba(0, 255, 157, 0.1);
+            padding: 2rem;
+            text-align: center;
+        }
+
+        h1 {
+            font-family: var(--font-primary);
+            color: var(--color-primary);
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            letter-spacing: 1px;
+            text-shadow: 0 0 10px var(--color-primary);
+        }
+
+        .subtitle {
+            font-size: 0.9rem;
+            color: var(--color-text);
+            margin-bottom: 2rem;
+        }
+
+        /* --- Input Area --- */
+        .note-input {
+            width: 100%;
+            height: 100px;
+            background: var(--color-secondary);
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            padding: 1rem;
+            color: var(--color-text);
+            font-family: var(--font-secondary);
+            font-size: 1rem;
+            resize: none;
+            margin-bottom: 1rem;
+        }
+
+        .note-input:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 15px rgba(0, 255, 157, 0.3);
+        }
+
+        /* --- Buttons --- */
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .geo-button {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border: 1px solid var(--color-primary);
+            border-radius: 8px;
+            background: transparent;
+            color: var(--color-primary);
+            font-family: var(--font-primary);
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .geo-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: var(--color-primary);
+            transition: all 0.3s ease;
+            z-index: -1;
+        }
+        
+        .geo-button:hover {
+            color: var(--color-bg);
+            box-shadow: 0 0 20px rgba(0, 255, 157, 0.5);
+        }
+        
+        .geo-button:hover::before {
+            left: 0;
+        }
+
+        .geo-button:disabled {
+            border-color: #555;
+            color: #555;
+            cursor: not-allowed;
+        }
+        
+        .geo-button:disabled:hover {
+            color: #555;
+            box-shadow: none;
+        }
+        
+        .geo-button:disabled::before {
+            left: -100%;
+        }
+
+        /* --- Output Area --- */
+        .output-area {
+            width: 100%;
+            min-height: 150px;
+            background: var(--color-secondary);
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-align: left;
+        }
+
+        .output-area h2 {
+            font-family: var(--font-primary);
+            color: var(--color-primary);
+            margin-bottom: 1rem;
+            border-bottom: 1px solid var(--color-border);
+            padding-bottom: 0.5rem;
+        }
+
+        .status-message {
+            color: var(--color-text);
+            font-size: 0.9rem;
+            font-style: italic;
+        }
+
+        /* --- Note Styling --- */
+        .note-item {
+            background: rgba(0, 255, 157, 0.05);
+            border-left: 3px solid var(--color-primary);
+            padding: 0.8rem 1rem;
+            margin-bottom: 0.8rem;
+            border-radius: 0 4px 4px 0;
+        }
+        
+        .note-item p {
+            font-size: 0.95rem;
+            color: #fff;
+            margin-bottom: 0.25rem;
+        }
+        
+        .note-item .distance {
+            font-size: 0.8rem;
+            font-weight: 300;
+            color: var(--color-text);
+        }
+
+        /* --- Scanner Animation --- */
+        #scanner-animation {
+            width: 100%;
+            height: 3px;
+            background: var(--color-primary);
+            border-radius: 5px;
+            box-shadow: 0 0 10px var(--color-primary), 0 0 20px var(--color-primary);
+            display: none; /* Hidden by default */
+            margin-top: 1rem;
+            animation: scan 2s ease-in-out infinite;
+        }
+
+        @keyframes scan {
+            0% { transform: translateY(0); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(140px); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="geo-container">
+        <h1>Geo-Note</h1>
+        <p class="subtitle">Leave ephemeral notes at your location.</p>
+        
+        <textarea id="note-input" class="note-input" placeholder="Your secret note (max 150 chars)..." maxlength="150"></textarea>
+        
+        <div class="button-group">
+            <button id="leave-note-btn" class="geo-button">Leave Note</button>
+            <button id="find-notes-btn" class="geo-button">Find Notes</button>
+        </div>
+        
+        <div id="output-area" class="output-area">
+            <h2>Scan Results</h2>
+            <p id="status-message" class="status-message">Press 'Find Notes' to scan your area...</p>
+            <div id="scanner-animation"></div>
+        </div>
+    </div>
+
+    <script>
+        // --- DOM Elements ---
+        const noteInput = document.getElementById('note-input');
+        const leaveNoteBtn = document.getElementById('leave-note-btn');
+        const findNotesBtn = document.getElementById('find-notes-btn');
+        const outputArea = document.getElementById('output-area');
+        const statusMessage = document.getElementById('status-message');
+        const scannerAnimation = document.getElementById('scanner-animation');
+        
+        // --- Config ---
+        const STORAGE_KEY = 'ephemeralGeoNotesDB';
+        const MAX_DISTANCE_METERS = 50; // How close you must be
+        const NOTE_LIFESPAN_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+        // --- Event Listeners ---
+        leaveNoteBtn.addEventListener('click', leaveNote);
+        findNotesBtn.addEventListener('click', findNotes);
+
+        // --- Core Logic ---
+
+        /**
+         * 1. Get user's current location.
+         * This is the base function for everything.
+         */
+        function getCurrentLocation() {
+            return new Promise((resolve, reject) => {
+                if (!navigator.geolocation) {
+                    reject(new Error('Geolocation is not supported by your browser.'));
+                    return;
+                }
+                
+                // Show loading state
+                setLoadingState(true, 'Acquiring GPS lock...');
+                
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        setLoadingState(false);
+                        resolve({
+                            lat: position.coords.latitude,
+                            lon: position.coords.longitude
+                        });
+                    },
+                    (error) => {
+                        let errorMessage;
+                        switch(error.code) {
+                            case error.PERMISSION_DENIED:
+                                errorMessage = "Location permission denied.";
+                                break;
+                            case error.POSITION_UNAVAILABLE:
+                                errorMessage = "Location information is unavailable.";
+                                break;
+                            case error.TIMEOUT:
+                                errorMessage = "Location request timed out.";
+                                break;
+                            default:
+                                errorMessage = "An unknown error occurred.";
+                                break;
+                        }
+                        setLoadingState(false);
+                        reject(new Error(errorMessage));
+                    },
+                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                );
+            });
+        }
+
+        /**
+         * 2. Leave a Note
+         */
+        async function leaveNote() {
+            const noteText = noteInput.value.trim();
+            if (noteText.length === 0) {
+                setStatus('Cannot leave an empty note.', 'error');
+                return;
+            }
+
+            try {
+                const coords = await getCurrentLocation();
+                
+                // Create the note object
+                const note = {
+                    id: Date.now() + Math.random().toString(36).substr(2, 9),
+                    lat: coords.lat,
+                    lon: coords.lon,
+                    timestamp: Date.now(),
+                    // "Encrypt" the text using Base64.
+                    // In a real app, use proper encryption (e.g., AES).
+                    text: btoa(unescape(encodeURIComponent(noteText))) 
+                };
+                
+                // Get existing notes and add the new one
+                const allNotes = getDatabase();
+                allNotes.push(note);
+                saveDatabase(allNotes);
+                
+                setStatus(`Note left successfully at [${coords.lat.toFixed(4)}, ${coords.lon.toFixed(4)}]`, 'success');
+                noteInput.value = '';
+                
+            } catch (error) {
+                setStatus(error.message, 'error');
+            }
+        }
+        
+        /**
+         * 3. Find Nearby Notes
+         */
+        async function findNotes() {
+            try {
+                const userCoords = await getCurrentLocation();
+                
+                // Clear previous results
+                outputArea.innerHTML = '<h2>Scan Results</h2><div id="scanner-animation"></div>';
+                document.getElementById('scanner-animation').style.display = 'block'; // Show scanner
+                
+                const allNotes = getDatabase();
+                const now = Date.now();
+                
+                const nearbyValidNotes = allNotes
+                    // 1. Filter out expired notes
+                    .filter(note => (now - note.timestamp) < NOTE_LIFESPAN_MS)
+                    // 2. Calculate distance and filter by radius
+                    .map(note => {
+                        const distance = haversineDistance(userCoords, { lat: note.lat, lon: note.lon });
+                        return { ...note, distance: distance };
+                    })
+                    .filter(note => note.distance <= MAX_DISTANCE_METERS)
+                    // 3. Sort by closest
+                    .sort((a, b) => a.distance - b.distance);
+                
+                // Clean the database of expired notes (garbage collection)
+                const freshNotes = allNotes.filter(note => (now - note.timestamp) < NOTE_LIFESPAN_MS);
+                saveDatabase(freshNotes);
+
+                // Stop scanner animation after a delay
+                setTimeout(() => {
+                    displayFoundNotes(nearbyValidNotes);
+                }, 1500); // Simulate scan time
+
+            } catch (error) {
+                setStatus(error.message, 'error');
+            }
+        }
+
+        /**
+         * 4. Display the notes found
+         */
+        function displayFoundNotes(notes) {
+            document.getElementById('scanner-animation').style.display = 'none'; // Hide scanner
+            
+            if (notes.length === 0) {
+                setStatus('No notes found within 50 meters. The area is clear.', 'neutral');
+                return;
+            }
+
+            notes.forEach(note => {
+                const noteEl = document.createElement('div');
+                noteEl.className = 'note-item';
+                
+                // "Decrypt" the text
+                // In a real app, use a proper decryption key.
+                let decryptedText;
+                try {
+                    decryptedText = decodeURIComponent(escape(atob(note.text)));
+                } catch (e) {
+                    decryptedText = "[Error: Could not decrypt note]";
+                }
+
+                noteEl.innerHTML = `
+                    <p>${decryptedText.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>
+                    <span class="distance">Found ${note.distance.toFixed(0)} meters away</span>
+                `;
+                outputArea.appendChild(noteEl);
+            });
+        }
+        
+        // --- Helper Functions ---
+
+        function setLoadingState(isLoading, message = '') {
+            leaveNoteBtn.disabled = isLoading;
+            findNotesBtn.disabled = isLoading;
+            if (isLoading) {
+                setStatus(message, 'neutral');
+            }
+        }
+        
+        function setStatus(message, type) {
+            // Clear previous results first
+            outputArea.innerHTML = '<h2>Scan Results</h2><div id="scanner-animation"></div>';
+            
+            const statusEl = document.createElement('p');
+            statusEl.id = 'status-message';
+            statusEl.className = 'status-message';
+            statusEl.textContent = message;
+            
+            if(type === 'error') statusEl.style.color = '#ff6b6b';
+            
+            // --- FIX IS HERE ---
+            // The `var()` function must be a string
+            if(type === 'success') statusEl.style.color = 'var(--color-primary)';
+            if(type === 'neutral') statusEl.style.color = 'var(--color-text)';
+            // --- END OF FIX ---
+            
+            outputArea.appendChild(statusEl);
+        }
+
+        // --- Database Simulation (localStorage) ---
+        // In a real app, this would be API calls to a server/database.
+        
+        function getDatabase() {
+            const dbString = localStorage.getItem(STORAGE_KEY);
+            return dbString ? JSON.parse(dbString) : [];
+        }
+        
+        function saveDatabase(notes) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+        }
+
+        // --- Geolocation Math: Haversine Formula ---
+        
+        /**
+         * Calculates the distance between two lat/lon points in meters.
+         */
+        function haversineDistance(coords1, coords2) {
+            const R = 6371e3; // Earth's radius in meters
+            const lat1 = coords1.lat * Math.PI/180; // φ, λ in radians
+            const lat2 = coords2.lat * Math.PI/180;
+            const deltaLat = (coords2.lat - coords1.lat) * Math.PI/180;
+            const deltaLon = (coords2.lon - coords1.lon) * Math.PI/180;
+
+            const a = Math.sin(deltaLat/2) * Math.sin(deltaLat/2) +
+                      Math.cos(lat1) * Math.cos(lat2) *
+                      Math.sin(deltaLon/2) * Math.sin(deltaLon/2);
+            
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            
+            return R * c; // Distance in meters
+        }
+        
+        // Initial check
+        if (!navigator.geolocation) {
+            setStatus("Geolocation is not supported by your browser. This app will not work.", "error");
+            leaveNoteBtn.disabled = true;
+            findNotesBtn.disabled = true;
+        }
+
+    </script>
