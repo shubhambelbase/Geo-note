@@ -10,7 +10,7 @@ const PORT = process.env.PORT || 3000;
 // !!!  PASTE YOUR MONGODB CONNECTION STRING FROM STEP 5 (in my last reply)  !!!
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 // It should look like: 'mongodb+srv://geoNoteUser:mySecretPass123@cluster0.xxxxx.mongodb.net/geoNoteDB?retryWrites=true&w=majority'
-const MONGO_URI = 'mongodb+srv://Shubhambelbase:<db_password>@geomap.308qlww.mongodb.net/?appName=Geomap';
+const MONGO_URI = process.env.MONGO_URI;
 
 const MAX_DISTANCE_METERS = 50;
 
