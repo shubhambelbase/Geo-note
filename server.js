@@ -9,7 +9,8 @@ const PORT = process.env.PORT || 3000;
 // Read the MONGO_URI from Render's "Environment Variables"
 const MONGO_URI = process.env.MONGO_URI; 
 
-const MAX_DISTANCE_METERS = 150; // Increased for GPS accuracy
+const MAX_DISTANCE_METERS = 500;
+ // Increased for GPS accuracy
 
 // --- MIDDLEWARE ---
 app.use(cors()); // Allow cross-origin requests
